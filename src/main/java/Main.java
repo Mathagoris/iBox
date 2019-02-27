@@ -1,6 +1,6 @@
 public class Main {
-    private static final String DEFAULT_DIR = "/watch-folder";
-    private static final String DATA_PATH = "/credentials.json";
+    private static final String DEFAULT_DIR = "/home/mathius/Documents/CS5850/watch-folder";
+    private static final String DATA_PATH = "/client_secret.json"; //resource file
 
     public static void main(String[] args){
         iBox myBox;

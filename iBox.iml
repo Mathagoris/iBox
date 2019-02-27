@@ -12,7 +12,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="org.mockito:mockito-all:1.10.19" level="project" />
-    <orderEntry type="library" name="com.google.apis:google-api-services-drive:v2-rev168-1.20.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.apis:google-api-services-drive:v3-rev152-1.25.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.api-client:google-api-client:1.25.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.http-client:google-http-client-jackson2:1.25.0" level="project" />
@@ -30,5 +29,7 @@
     <orderEntry type="library" name="Maven: org.mortbay.jetty:jetty:6.1.26" level="project" />
     <orderEntry type="library" name="Maven: org.mortbay.jetty:jetty-util:6.1.26" level="project" />
     <orderEntry type="library" name="Maven: org.mortbay.jetty:servlet-api:2.5-20081211" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.6" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-all:1.9.5" level="project" />
   </component>
 </module>
