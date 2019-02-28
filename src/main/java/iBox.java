@@ -1,53 +1,48 @@
-
-import com.google.api.services.drive.Drive;
-
-import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.List;
+
 import static java.nio.file.StandardWatchEventKinds.*;
 
 public class iBox {
     private static ICloudFilesystem drive = new GoogleDrive();
+    private static IFolderWatcher watchService = new FolderWatcher();
+    private static IFileEventProcessor eventProcessor;
     private static String DIR_TO_WATCH;
     private static final String DRIVE_FOLDER_NAME = "iBox-App-Folder";
 
-    public iBox(String dirToWatch, String credsPath) throws Exception {
+    public iBox(String dirToWatch, String credsPath) throws IOException {
         DIR_TO_WATCH = dirToWatch;
         if (!drive.connect(credsPath)) {
-
+            throw new IOException("Unable to Connect to Google Drive! Check error logs for more detail");
         }
-        drive.createNewFolder(DRIVE_FOLDER_NAME);
+        if (!drive.createNewFolder(DRIVE_FOLDER_NAME)) {
+            throw new IOException("Unable to create a folder for this App on Google Drive! Check error logs for more detail");
+        }
+        if (!watchService.setup(DIR_TO_WATCH)) {
+            throw new IOException("Unable to initialize folder watching service! Check error logs for more detail");
+        }
+
     }
-    public iBox(GoogleDrive drive) { this.drive = drive; }
 
-    public void watch() {
-        Path dir = Paths.get(DIR_TO_WATCH);
-        WatchService watcher;
-        WatchKey key;
-        try {
-            watcher = FileSystems.getDefault().newWatchService();
-            key = dir.register(watcher,
-                    ENTRY_CREATE,
-                    ENTRY_DELETE,
-                    ENTRY_MODIFY);
-            System.out.println("Watching folder: " + dir);
-        } catch (IOException e) {
-            System.err.println("Unable to watch folder. It may not exist.");
-            e.printStackTrace(System.err);
-            return;
-        }
+    public iBox(GoogleDrive drive, FolderWatcher watchService, FileEventProcessor eventProcessor) {
+        this.drive = drive;
+        this.watchService = watchService;
+        this.eventProcessor = eventProcessor;
+    }
 
+    void watch() {
+        List<WatchEvent<?>> events;
         // Watch folder in infinite loop
         while(true) {
             try {
-                key = watcher.take();
+                events = watchService.captureEvents();
             } catch (InterruptedException e) {
                 System.err.println("An error occurred while watching folder.");
                 e.printStackTrace(System.err);
                 return;
             }
-
-            for (WatchEvent<?> event: key.pollEvents()) {
+            for (WatchEvent<?> event: events) {
                 WatchEvent.Kind<?> kind = event.kind();
 
                 // This key is registered only for ENTRY_CREATE events,
@@ -62,47 +57,16 @@ public class iBox {
                 WatchEvent<Path> ev = (WatchEvent<Path>)event;
                 Path fileName = ev.context();
 
-                processEvent(fileName, kind);
+                eventProcessor.processEvent(fileName.toString(), kind, drive, DIR_TO_WATCH);
             }
 
             // Reset the key -- this step is critical if you want to
             // receive further watch events.  If the key is no longer valid,
             // the directory is inaccessible so exit the loop.
-            boolean valid = key.reset();
+            boolean valid = watchService.resetKey();
             if (!valid) {
                 break;
             }
         }
-    }
-
-    private boolean processEvent(Path fileName, WatchEvent.Kind<?> kind) {
-        boolean eventSuccess = false;
-
-        if (fileName.getFileName().toString().startsWith("."))
-            return false;
-
-        System.out.println("***Directory changed: " + fileName + "***");
-        System.out.println("File action: " + kind);
-
-        if (kind == ENTRY_CREATE) {
-            eventSuccess = drive.uploadFile(DIR_TO_WATCH, fileName.toString());
-            if (eventSuccess)
-                System.out.println("File uploaded to Google Drive!");
-            else
-                System.out.println("Unable to upload file! :(");
-        } else if (kind == ENTRY_MODIFY) {
-            eventSuccess = drive.updateFile(DIR_TO_WATCH, fileName.toString());
-            if (eventSuccess)
-                System.out.println("File updated on Google Drive!");
-            else
-                System.out.println("Unable to update file! :(");
-        } else if (kind == ENTRY_DELETE) {
-            eventSuccess = drive.deleteFile(fileName.toString());
-            if (eventSuccess)
-                System.out.println("File deleted from Google Drive!");
-            else
-                System.out.println("Unable to delete file! :(");
-        }
-        return eventSuccess;
     }
 }
