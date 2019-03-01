@@ -10,7 +10,7 @@ public class FileEventProcessorTest {
         ICloudFilesystem drive = mock(GoogleDrive.class);
         IFileEventProcessor eventProcessor = new FileEventProcessor();
 
-        Assert.assertTrue(!eventProcessor.processEvent(".invalid.txt", ENTRY_CREATE, drive, "/"));
+        Assert.assertFalse(eventProcessor.processEvent(".invalid.txt", ENTRY_CREATE, drive, "/"));
     }
 
     @Test
@@ -24,7 +24,7 @@ public class FileEventProcessorTest {
 
         // Drive failed to upload
         when(drive.uploadFile(anyString(), anyString())).thenReturn(false);
-        Assert.assertTrue(!eventProcessor.processEvent("someFile.txt", ENTRY_CREATE, drive, "/"));
+        Assert.assertFalse(eventProcessor.processEvent("someFile.txt", ENTRY_CREATE, drive, "/"));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class FileEventProcessorTest {
 
         // Drive failed to upload
         when(drive.updateFile(anyString(), anyString())).thenReturn(false);
-        Assert.assertTrue(!eventProcessor.processEvent("someFile.txt", ENTRY_MODIFY, drive, "/"));
+        Assert.assertFalse(eventProcessor.processEvent("someFile.txt", ENTRY_MODIFY, drive, "/"));
     }
 
     @Test
@@ -52,6 +52,6 @@ public class FileEventProcessorTest {
 
         // Drive failed to upload
         when(drive.deleteFile(anyString())).thenReturn(false);
-        Assert.assertTrue(!eventProcessor.processEvent("someFile.txt", ENTRY_DELETE, drive, "/"));
+        Assert.assertFalse(eventProcessor.processEvent("someFile.txt", ENTRY_DELETE, drive, "/"));
     }
 }
